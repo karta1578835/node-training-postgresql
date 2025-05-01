@@ -1,6 +1,7 @@
 require("dotenv").config()
 const http = require("http")
 const AppDataSource = require("./db")
+const skillRepo = AppDataSource.getRepository("Skill");
 
 function isUndefined (value) {
   return value === undefined
@@ -136,6 +137,93 @@ const requestListener = async (req, res) => {
   } else if (req.method === "OPTIONS") {
     res.writeHead(200, headers)
     res.end()
+  }else if(req.url === "/api/coaches/skill" && req.method === "GET"){
+    try{
+      const packages = await skillRepo.find({
+        select: ["id", "name"]
+      })
+      res.writeHead(200, headers)
+      res.write(JSON.stringify({
+        status: "success",
+        data: packages
+      }))
+      res.end()
+    }catch(error){
+      errorServerHandler(error);
+    }
+  }else if(req.url === "/api/coaches/skill" && req.method === "POST"){
+    req.on("end", async () => {
+      try{
+        const data = JSON.parse(body)
+        if (isUndefined(data.name) || isNotValidSting(data.name)){
+          res.writeHead(400, headers)
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "欄位未填寫正確"
+          }))
+          res.end()
+          return
+        }
+        const existPackage = await skillRepo.find({
+          where: {
+            name: data.name
+          }
+        })
+        if(existPackage.length > 0) {
+          res.writeHead(409, headers)
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "資料重複"
+          }))
+          res.end()
+          return
+        }
+        const newPackage = skillRepo.create({
+          name: data.name
+        })
+        const result = await skillRepo.save(newPackage)
+        res.writeHead(200, headers)
+        res.write(JSON.stringify({
+          status: "success",
+          data: result
+        }))
+        res.end()
+      }catch(error){
+        console.error(error)
+        errorServerHandler(error);
+      }
+    })
+  }else if(req.url.startsWith("/api/coaches/skill/") && req.method === "DELETE"){
+    try{
+      const packageId = req.url.split("/").pop()
+      if(isUndefined(packageId) || isNotValidSting(packageId)){
+        res.writeHead(400, headers)
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤"
+        }))
+        res.end()
+        return
+      }
+      const result = await skillRepo.delete(packageId)
+      if(result.affected === 0){
+        res.writeHead(400, headers)
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤"
+        }))
+        res.end()
+        return
+      }
+      res.writeHead(200, headers)
+      res.write(JSON.stringify({
+        status: "success"
+      }))
+      res.end()
+    }catch(error){
+      console.error(error)
+      errorServerHandler(error);
+    }
   } else {
     res.writeHead(404, headers)
     res.write(JSON.stringify({
@@ -144,6 +232,15 @@ const requestListener = async (req, res) => {
     }))
     res.end()
   }
+}
+
+function errorServerHandler(error){
+  res.writeHead(500, headers)
+  res.write(JSON.stringify({
+    status: "error",
+    message: "伺服器錯誤"
+  }))
+  res.end()
 }
 
 const server = http.createServer(requestListener)
