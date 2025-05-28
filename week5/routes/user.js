@@ -122,7 +122,7 @@ router.post('/login', async (req, res, next) => {
       })
       return
     }
-    const token = await generateJWT({
+    const token = await generateJWT({//不能省略await
       id: existingUser.id
     }, config.get('secret.jwtSecret'), {
       expiresIn: `${config.get('secret.jwtExpiresDay')}`
@@ -191,7 +191,7 @@ router.put('/profile', auth, async (req, res, next) => {
     }
     const updatedResult = await userRepository.update({
       id,
-      name: user.name
+      name: user.name //如果ID是唯一值就不需要附上name=user.name的條件了
     }, {
       name
     })

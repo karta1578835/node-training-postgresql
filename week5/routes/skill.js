@@ -4,6 +4,7 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 
 const logger = require('../utils/logger')('Skill')
+const appError = require('../utils/appError')
 
 function isUndefined (value) {
   return value === undefined
@@ -32,10 +33,11 @@ router.post('/', async (req, res, next) => {
   try {
     const { name } = req.body
     if (isUndefined(name) || isNotValidSting(name)) {
-      res.status(400).json({
-        status: 'failed',
-        message: '欄位未填寫正確'
-      })
+      // res.status(400).json({
+      //   status: 'failed',
+      //   message: '欄位未填寫正確'
+      // })
+      next(appError(400, "欄位未填寫正確1"))
       return
     }
     const skillRepo = await dataSource.getRepository('Skill')
