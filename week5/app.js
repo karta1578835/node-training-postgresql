@@ -10,6 +10,10 @@ const userRouter = require('./routes/user')
 const adminRouter = require('./routes/admin')
 const courseRouter = require('./routes/course')
 
+// const uploadRouter = require('./routes/upload');
+// const uploadRoute = require('./routes/sup_upload_multer');
+const uploadRoute = require('./routes/sup_upload_formidable');
+
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -34,6 +38,8 @@ app.use('/api/skill', skillRouter)
 app.use('/api/user', userRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/course', courseRouter)
+// app.use('/api/upload', uploadRouter);
+app.use('/api/sup', uploadRoute);
 
 // 404
 app.use((req, res, next) =>{
